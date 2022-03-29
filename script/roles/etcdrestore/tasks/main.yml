@@ -1,0 +1,83 @@
+- block:
+  - name: Read etcd backup file
+    find:
+      paths: "{{ ('/var/ko/data/backup/' + cluster_name) | realpath  }}"
+      patterns: "{{ etcd_snapshot_name }}"
+    register: etcd_back_paths
+
+  - name: Verify the backup file exists
+    assert:
+      that: etcd_back_paths.files|length >= 1
+      msg: "未获取到etcd备份文件。"
+  delegate_to: localhost
+
+- name: Confirm kubelet has stopped running
+  service:
+    name: kubelet
+    state: stopped
+
+- name: Confirm etcd has stopped running
+  service:
+    name: etcd
+    state: stopped
+
+- name: Confirm etcd data related directories exist
+  file:
+    name: "{{ item }}"
+    state: directory
+  with_items:
+  - /etc/kubernetes/backup/etcd
+
+- name: Copy etcd backup file to all etcd node
+  copy:
+    src: "/var/ko/data/backup/{{ cluster_name }}/{{ etcd_snapshot_name }}"
+    dest: "/etc/kubernetes/backup/etcd/{{ etcd_snapshot_name }}"
+
+- name: Confirm backup directory exist
+  file:
+    name: "/var/ko/data/backup/k8s"
+    state: directory
+
+- name: Clean up the last backup and restore data
+  file:
+    name: "/var/ko/data/backup/k8s/etcd"
+    state: absent
+
+- name: Restore the data to the etcd data directory
+  shell: "cp -rf {{ etcd_data_dir }} /var/ko/data/backup/k8s/"
+
+- name: Restore etcd data
+  shell: "cd /etc/kubernetes/backup/etcd && \
+    ETCDCTL_API=3 {{ bin_dir }}/etcdctl snapshot restore \
+    {{ etcd_snapshot_name }}"
+
+- name: Authorization etcd data directory
+  file:
+    path: "{{ etcd_data_dir }}"
+    mode: '0755'
+
+- name: Remove temporary etcd backup files from each node
+  file:
+    name: "/etc/kubernetes/backup/etcd/{{ etcd_snapshot_name }}"
+    state: absent
+
+- name: Remove default.etcd from each node
+  file:
+    name: "/etc/kubernetes/backup/etcd/default.etcd"
+    state: absent
+
+- name: Systemctl daemon-reload
+  systemd:
+    daemon_reload: yes
+
+- name: Restart etcd service
+  service:
+    name: etcd
+    state: restarted
+    enabled: yes
+
+- name: Start kubelet service
+  service:
+    name: kubelet
+    state: restarted
+    enabled: yes

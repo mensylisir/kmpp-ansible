@@ -1,0 +1,38 @@
+---
+# tasks file for koadmin
+- name: kubeadmin | Create addon dir
+  file:
+    path: "{{ kube_config_dir }}/addons/kubeadmin-token"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: kubeadmin  | Templates list
+  set_fact:
+    kubeadmin_templates:
+      - { name: kubernetes-token-sa, file: kubernetes-token-sa.yaml, type: sa }
+      - { name: kubernetes-token-clusterrolebinding, file: kubernetes-token-clusterrolebinding.yaml, type: clusterrolebinding }
+
+- name: kubeadmin   | Create manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/addons/kubeadmin-token/{{ item.file }}"
+  with_items: "{{ kubeadmin_templates }}"
+  register: kubeadmin_manifests
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: kubeadmin   | Apply manifests
+  kube:
+    name: "{{ item.item.name }}"
+    namespace: "{{ kubeadmin_namespace }}"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/addons/kubeadmin-token/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ kubeadmin_manifests.results }}"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]

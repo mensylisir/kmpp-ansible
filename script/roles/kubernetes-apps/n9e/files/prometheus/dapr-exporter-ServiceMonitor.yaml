@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: dapr-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 1.0.0
+  name: dapr-exporter
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 10s
+    honorLabels: true
+    port: http-metrics
+    path: "/"
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dapr-exporter
+  namespaceSelector:
+    any: true
+

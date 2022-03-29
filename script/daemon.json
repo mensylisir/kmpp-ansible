@@ -1,0 +1,26 @@
+{
+  "registry-mirrors": [
+    "https://qjzfwfvb.mirror.aliyuncs.com"
+  ],
+  "insecure-registries": [
+    "192.168.111.103:18093",
+    "images.kmpp.io:18093"
+  ],
+  "default-address-pools": [
+    {
+      "base": "10.10.0.0/16",
+      "size": 24
+    }
+  ],
+  "debug": false,
+  "experimental": false,
+  "features": {
+    "buildkit": true
+  },
+  "builder": {
+    "gc": {
+      "enabled": true,
+      "defaultKeepStorage": "20GB"
+    }
+  }
+}

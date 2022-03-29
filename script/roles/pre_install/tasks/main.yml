@@ -1,0 +1,17 @@
+---
+# tasks file for pre_install
+- name: pre_install | Create addon dir
+  file:
+    path: "{{ kube_config_dir }}/addons/pre_install"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: pre_install | Copy files
+  copy:
+    src: "{{ role_path }}/files/"
+    dest: "{{ kube_config_dir }}/addons/pre_install/"
+
+- name: pre_install | White hosts
+  script: "pre_install.sh"

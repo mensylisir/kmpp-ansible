@@ -1,0 +1,2 @@
+keos_kubeconfig_path: "{{ kube_config_dir }}/admin.conf"
+

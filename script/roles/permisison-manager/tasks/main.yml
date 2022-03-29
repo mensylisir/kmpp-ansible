@@ -1,0 +1,41 @@
+---
+# tasks file for permisison-manager
+- name: permisison-manager | Create addon dir
+  file:
+    path: "{{ kube_config_dir }}/addons/permisison-manager"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: permisison-manager  | Templates list
+  set_fact:
+    permisison_manager_templates:
+      - { name: namespace, file: namespace.yml, type: ns }
+      - { name: crd, file: crd.yml, type: crd }
+      - { name: template-cluster-resources___admin, file: template-cluster-resources___admin.yml, type: clusterrole }
+      - { name: template-cluster-resources___read-only, file: template-cluster-resources___read-only.yml, type: clusterrole }
+      - { name: template-namespaced-resources___developer, file: template-namespaced-resources___developer.yml, type: clusterrole }
+      - { name: template-namespaced-resources___operation, file: template-namespaced-resources___operation.yml, type: clusterrole }
+
+- name: permisison-manager   | Create manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/addons/permisison-manager/{{ item.file }}"
+  with_items: "{{ permisison_manager_templates }}"
+  register: permisison_manager_manifests
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: permisison-manager   | Apply manifests
+  kube:
+    name: "{{ item.item.name }}"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/addons/permisison-manager/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ permisison_manager_manifests.results }}"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]

@@ -1,0 +1,10 @@
+- name: 测试ansible任务
+  hosts: all
+  remote_user: root
+  gather_facts: True
+  tasks:
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"

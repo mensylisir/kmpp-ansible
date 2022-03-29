@@ -1,0 +1,22 @@
+---
+- hosts: kube_control_plane[0]
+  strategy: linear
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  gather_facts: false
+  roles:
+    - { role: kubernetes-apps/n9e }
+
+- hosts: kube_control_plane[0]
+  strategy: linear
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  gather_facts: false
+  roles:
+    - { role: kubernetes-apps/loki-promtail }
+
+- hosts: kube_control_plane[0]
+  strategy: linear
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  gather_facts: false
+  roles:
+    - { role: kubernetes-apps/kubeapps }
+

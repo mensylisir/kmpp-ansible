@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: jvm-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 0.16.1
+  name: jvm-exporter
+  namespace: monitoring
+spec:
+  endpoints:
+  - path: "/actuator/prometheus"
+    port: http-metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jvm-exporter
+  namespaceSelector:
+    any: true

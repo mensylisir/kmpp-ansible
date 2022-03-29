@@ -1,0 +1,35 @@
+all:
+  children:
+    calico_rr:
+      hosts: {}
+    etcd:
+      hosts:
+        master: 
+    k8s_cluster:
+      children:
+        kube_control_plane: 
+        kube_node: 
+    kube_control_plane:
+      hosts:
+        master: 
+    kube_node:
+      hosts:
+        master: 
+        node1: 
+        node2: 
+  hosts:
+    master:
+      access_ip: 192.168.111.100
+      ansible_host: 192.168.111.100
+      ansible_port: 22
+      ip: 192.168.111.100
+    node1:
+      access_ip: 192.168.111.101
+      ansible_host: 192.168.111.101
+      ansible_port: 22
+      ip: 192.168.111.101
+    node2:
+      access_ip: 192.168.111.102
+      ansible_host: 192.168.111.102
+      ansible_port: 22
+      ip: 192.168.111.102

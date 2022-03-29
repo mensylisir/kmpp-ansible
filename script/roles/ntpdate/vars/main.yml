@@ -1,0 +1,6 @@
+---
+# vars file for koadmin
+#
+timeserver: "192.168.81.104"
+saName: "ko-admin"
+kubeadmin_namespace: "kube-system"

@@ -1,0 +1,99 @@
+---
+- name: N9E | Create manifests dir
+  file:
+    path: "{{ kube_config_dir }}/addons/n9e/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: copy files
+  copy:
+    src: "{{ role_path }}/files/"
+    dest: "{{ kube_config_dir }}/addons/n9e/"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+
+- name: Create Namespace
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/namespace/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+
+- name: Deploy Mysql
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/mysql/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Redis
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/redis/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Ibex
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/ibex/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Agentd
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/agentd/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+
+- name: Deploy Nwebapi
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/nwebapi/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+
+- name: Deploy Telegraf
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/telegraf/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Nserver
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/nserver/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Prometheus
+  shell: "{{ bin_dir }}/kubectl apply --server-side -f {{ kube_config_dir }}/addons/n9e/prometheus/setup/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Sleep 5s
+  wait_for:
+    timeout: 5
+
+- name: Deploy Prometheus
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/n9e/prometheus/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy Loki and Promtail from local path
+  shell: /usr/local/bin/helm install victoria-metrics  "{{ kube_config_dir }}/addons/n9e/victoriametrics" -n vm
+  args:
+    executable: /bin/bash
+  register: "results"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- debug:
+    var: results
+
+
+

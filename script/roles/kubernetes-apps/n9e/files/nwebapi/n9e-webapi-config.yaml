@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n9e-webapi-config
+  labels:
+    app: n9e-webapi
+  namespace: opsmon
+data:
+  metrics.yaml: |-
+    cpu_usage_idle: CPU空闲率（单位：%）
+    cpu_usage_active: CPU使用率（单位：%）
+    cpu_usage_system: CPU内核态时间占比（单位：%）
+    cpu_usage_user: CPU用户态时间占比（单位：%）
+    cpu_usage_nice: 低优先级用户态CPU时间占比，也就是进程nice值被调整为1-19之间的CPU时间。这里注意，nice可取值范围是-20到19，数值越大，优先级反而越低（单位：%）
+    cpu_usage_iowait: CPU等待I/O的时间占比（单位：%）
+    cpu_usage_irq: CPU处理硬中断的时间占比（单位：%）
+    cpu_usage_softirq: CPU处理软中断的时间占比（单位：%）
+    cpu_usage_steal: 在虚拟机环境下有该指标，表示CPU被其他虚拟机争用的时间占比，超过20就表示争抢严重（单位：%）
+    cpu_usage_guest: 通过虚拟化运行其他操作系统的时间，也就是运行虚拟机的CPU时间占比（单位：%）
+    cpu_usage_guest_nice: 以低优先级运行虚拟机的时间占比（单位：%）
+
+    disk_free: 硬盘分区剩余量（单位：byte）
+    disk_used: 硬盘分区使用量（单位：byte）
+    disk_used_percent: 硬盘分区使用率（单位：%）
+    disk_total: 硬盘分区总量（单位：byte）
+    disk_inodes_free: 硬盘分区inode剩余量 
+    disk_inodes_used: 硬盘分区inode使用量
+    disk_inodes_total: 硬盘分区inode总量
+
+    diskio_io_time: 从设备视角来看I/O请求总时间，队列中有I/O请求就计数（单位：毫秒），counter类型，需要用函数求rate才有使用价值
+    diskio_iops_in_progress: 已经分配给设备驱动且尚未完成的IO请求，不包含在队列中但尚未分配给设备驱动的IO请求，gauge类型
+    diskio_merged_reads: 相邻读请求merge读的次数，counter类型
+    diskio_merged_writes: 相邻写请求merge写的次数，counter类型
+    diskio_read_bytes: 读取的byte数量，counter类型，需要用函数求rate才有使用价值
+    diskio_read_time: 读请求总时间（单位：毫秒），counter类型，需要用函数求rate才有使用价值
+    diskio_reads: 读请求次数，counter类型，需要用函数求rate才有使用价值
+    diskio_weighted_io_time: 从I/O请求视角来看I/O等待总时间，如果同时有多个I/O请求，时间会叠加（单位：毫秒）
+    diskio_write_bytes: 写入的byte数量，counter类型，需要用函数求rate才有使用价值
+    diskio_write_time: 写请求总时间（单位：毫秒），counter类型，需要用函数求rate才有使用价值
+    diskio_writes: 写请求次数，counter类型，需要用函数求rate才有使用价值
+
+  webapi.conf: |-
+    # debug, release
+    RunMode = "release"
+
+    # # custom i18n dict config
+    # I18N = "./etc/i18n.json"
+
+    # do not change
+    AdminRole = "Admin"
+
+    # Linkage with notify.py script
+    NotifyChannels = [ "sms", "email", "dingtalk", "wecom", "feishu" ]
+
+    [[ContactKeys]]
+    Label = "Sms Alert Url"
+    Key = "sms_alert_url"
+
+    [[ContactKeys]]
+    Label = "Wecom Robot Token"
+    Key = "wecom_robot_token"
+
+    [[ContactKeys]]
+    Label = "Dingtalk Robot Token"
+    Key = "dingtalk_robot_token"
+
+    [[ContactKeys]]
+    Label = "Feishu Robot Token"
+    Key = "feishu_robot_token"
+
+    [Log]
+    # log write dir
+    Dir = "logs"
+    # log level: DEBUG INFO WARNING ERROR
+    Level = "DEBUG"
+    # stdout, stderr, file
+    Output = "stdout"
+    # rotate by time
+    #KeepHours = 4
+    # rotate by size
+    #RotateNum = 3
+    # unit: MB
+    #RotateSize = 256
+
+    [HTTP]
+    # http listening address
+    Host = "0.0.0.0"
+    # http listening port
+    Port = 18000
+    # https cert file path
+    CertFile = ""
+    # https key file path
+    KeyFile = ""
+    # whether print access log
+    PrintAccessLog = true
+    # whether enable pprof
+    PProf = true
+    # http graceful shutdown timeout, unit: s
+    ShutdownTimeout = 30
+    # max content length: 64M
+    MaxContentLength = 67108864
+    # http server read timeout, unit: s
+    ReadTimeout = 20
+    # http server write timeout, unit: s
+    WriteTimeout = 40
+    # http server idle timeout, unit: s
+    IdleTimeout = 120
+
+    [JWTAuth]
+    # signing key
+    SigningKey = "5b94a0fd640fe2765af826acfo42d151"
+    # unit: min
+    AccessExpired = 1500
+    # unit: min
+    RefreshExpired = 10080
+    RedisKeyPrefix = "/jwt/"
+
+    [BasicAuth]
+    user001 = "ccc26da7b9aba533cbb263a36c07dca5"
+
+    [AnonymousAccess]
+    PromQuerier = false
+    AlertDetail = false
+
+    [Redis]
+    # address, ip:port
+    Address = "192.168.100.2:6379"
+    # requirepass
+    Password = "1234"
+    # # db
+    DB = 1
+
+    [Gorm]
+    # enable debug mode or not
+    Debug = true
+    # mysql postgres
+    DBType = "mysql"
+    # unit: s
+    MaxLifetime = 7200
+    # max open connections
+    MaxOpenConns = 150
+    # max idle connections
+    MaxIdleConns = 50
+    # table prefix
+    TablePrefix = ""
+    # enable auto migrate or not
+    EnableAutoMigrate = false
+
+    [MySQL]
+    # mysql address host:port
+    Address = "mysql:3306"
+    # mysql username
+    User = "root"
+    # mysql password
+    Password = "1234"
+    # database name
+    DBName = "n9e_v5"
+    # connection params
+    Parameters = "charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true"
+
+    [[Clusters]]
+    # Prometheus cluster name
+    Name = "Default"
+    # Prometheus APIs base url
+    Prom = "http://10.100.11.32:8481/select/0/prometheus"
+    # Basic auth username
+    #BasicAuthUser = ""
+    # Basic auth password
+    #BasicAuthPass = ""
+    # timeout settings, unit: ms
+    Timeout = 30000
+    DialTimeout = 10000
+    TLSHandshakeTimeout = 30000
+    ExpectContinueTimeout = 1000
+    IdleConnTimeout = 90000
+    # time duration, unit: ms
+    KeepAlive = 30000
+    MaxConnsPerHost = 0
+    MaxIdleConns = 100
+    MaxIdleConnsPerHost = 100
+
+    [Ibex]
+    Address = "http://ibex:10090"
+    # basic auth
+    BasicAuthUser = "ibex"
+    BasicAuthPass = "ibex"
+    # unit: ms
+    Timeout = 3000

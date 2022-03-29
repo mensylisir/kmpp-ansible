@@ -1,0 +1,6 @@
+---
+# tasks file for installing foo on yum based distros
+- name: Install nfs-utils
+  yum:
+    name: nfs-utils
+    state: present

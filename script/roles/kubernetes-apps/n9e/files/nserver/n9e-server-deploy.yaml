@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  namespace: opsmon
+spec:
+  minReadySeconds: 1
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: n9e-server
+      version: 5.2.0
+  template:
+    metadata:
+      labels:
+        app: n9e-server
+        version: 5.2.0
+    spec:
+      containers:
+      - name: n9e-server
+        image: ulric2019/nightingale:5.3.0
+        imagePullPolicy: Always
+        command: 
+        - "/app/n9e"
+        - "server"
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: GIN_MODE
+          value: release
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/bash", "-c", "sleep 10"]
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 4000Mi
+          requests:
+            cpu: 200m
+            memory: 400Mi
+        ports:
+        - containerPort: 19000
+        volumeMounts:
+        - mountPath: /app/etc/metrics.yaml
+          name: n9e-metrics
+          subPath: metrics.yaml
+        - mountPath: /app/etc/server.conf
+          name: n9e-server
+          subPath: server.conf
+        - mountPath: /app/etc/webapi.conf
+          name: n9e-webapi
+          subPath: webapi.conf
+        - mountPath: /app/etc/script/notify.py
+          name: n9e-notify
+          subPath: notify.py
+        - mountPath: /app/etc/template
+          name: n9e-template
+      volumes:
+      - name: n9e-metrics
+        configMap:
+          name: metrics-config
+      - name: n9e-server
+        configMap:
+          name: server-config
+      - name: n9e-webapi
+        configMap:
+          name: webapi-config
+      - name: n9e-notify
+        configMap:
+          name: notify-config
+      - name: n9e-template
+        configMap:
+          name: template-config
+

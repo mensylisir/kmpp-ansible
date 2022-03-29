@@ -1,0 +1,45 @@
+---
+- hosts: all
+  gather_facts: False
+  tasks:
+    - name: Gen_certs | target ca-certificate store file
+      set_fact:
+        ca_cert_path: |-
+          {% if ansible_os_family == "Debian" -%}
+          /usr/local/share/ca-certificates/ca.pem
+          {%- elif ansible_os_family == "RedHat" -%}
+          /etc/pki/ca-trust/source/anchors/ca.pem
+          {%- elif ansible_os_family == "CentOS" -%}
+          /etc/pki/ca-trust/source/anchors/ca.pem
+          {%- elif ansible_os_family in ["Flatcar Container Linux by Kinvolk"] -%}
+          /etc/ssl/certs/ca.pem
+          {%- elif ansible_os_family == "Suse" -%}
+          /etc/pki/trust/anchors/ca.pem
+          {%- elif ansible_os_family == "ClearLinux" -%}
+          /usr/share/ca-certs/ca.pem
+          {%- endif %}
+      tags:
+        - facts
+
+    - name: Gen_certs | add CA to trusted CA dir
+      copy:
+        src: "{{ registry_cert_path }}"
+        dest: "{{ ca_cert_path }}"
+      register: registry_ca_cert
+
+    - name: Gen_certs | update ca-certificates (Debian/Ubuntu/SUSE/Flatcar)  # noqa 503
+      command: update-ca-certificates
+      when: registry_ca_cert.changed and ansible_os_family in ["Debian", "Flatcar Container Linux by Kinvolk", "Suse"]
+
+    - name: Gen_certs | update ca-certificates (RedHat)  # noqa 503
+      command: update-ca-trust extract
+      when: registry_ca_cert.changed and ansible_os_family == "RedHat"
+
+    - name: Gen_certs | update ca-certificates (RedHat)  # noqa 503
+      command: update-ca-trust extract
+      when: registry_ca_cert.changed and ansible_os_family == "CentOS"
+
+
+    - name: Gen_certs | update ca-certificates (ClearLinux)  # noqa 503
+      command: clrtrust add "{{ ca_cert_path }}"
+      when: registry_ca_cert.changed and ansible_os_family == "ClearLinux"

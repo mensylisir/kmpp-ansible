@@ -1,0 +1,89 @@
+---
+
+- name: Prometheus | Create istio dir
+  file:
+    path: "{{ kube_config_dir }}/addons/istio"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Prometheus | Create setup dir
+  file:
+    path: "{{ kube_config_dir }}/addons/istio/setup"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Prometheus | Create resource dir
+  file:
+    path: "{{ kube_config_dir }}/addons/istio/resource"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+
+- name: Prometheus | Create addon dir
+  file:
+    path: "{{ kube_config_dir }}/addons/istio/addon"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: copy setup files
+  copy:
+    src: "{{ role_path }}/files/setup/"
+    dest: "{{ kube_config_dir }}/addons/istio/setup/"
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Deploy Crd
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/istio/setup/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: copy Resource files
+  copy:
+    src: "{{ role_path }}/files/resource/"
+    dest: "{{ kube_config_dir }}/addons/istio/resource/"
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Create namespace
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/istio/resource/istio-namespace.yaml"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+
+
+- name: Deploy Istio
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/istio/resource/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: copy Resource files
+  copy:
+    src: "{{ role_path }}/files/addon/"
+    dest: "{{ kube_config_dir }}/addons/istio/addon/"
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Deploy Istio
+  shell: "{{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/addons/istio/addon/"
+  ignore_errors: true
+  when:
+    - inventory_hostname == groups['kube-master'][0]

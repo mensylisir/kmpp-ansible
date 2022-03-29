@@ -1,0 +1,59 @@
+---
+- include: apt_package.yml
+  when: ansible_pkg_mgr == 'apt'
+- include: yum_package.yml
+  when: ansible_pkg_mgr == 'yum'
+
+- block:
+    - name: NFS| Set defaultvers
+      replace:
+        path: /etc/nfsmount.conf
+        regexp: '# Defaultvers=4'
+        replace: "Defaultvers=3"
+
+    - name: Set nfsvers
+      replace:
+        path: /etc/nfsmount.conf
+        regexp: '# Nfsvers=4'
+        replace: "Nfsvers=3"
+
+    - name: NFS| Set nfslock
+      replace:
+        path: /etc/nfsmount.conf
+        regexp: '# Lock=True'
+        replace: "Lock=False"
+  when:
+    - storage_nfs_server_version is defined and storage_nfs_server_version == "3"
+  ignore_errors: true
+
+- name: NFS| Prepare nfs-client directory
+  file: name={{ kube_config_dir }}/addons/storage-addons/nfs state=directory
+
+- name: kubeadmin  | Templates list
+  set_fact:
+    nfs_templates:
+      - { name: nfs-serviceaccount, file: nfs-serviceaccount.yaml, type: sa }
+      - { name: nfs-clusterrolebinding, file: nfs-clusterrolebinding.yaml, type: clusterrolebinding }
+      - { name: nfs-client-provisioner, file: nfs-client-provisioner.yaml, type: deployment }
+      - { name: nfs-class, file: nfs-class.yaml, type: storageclass }
+
+- name: kubeadmin   | Create manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/addons/storage-addons/nfs/{{ item.file }}"
+  with_items: "{{ nfs_templates }}"
+  register: nfs_manifests
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: kubeadmin   | Apply manifests
+  kube:
+    name: "{{ item.item.name }}"
+    namespace: "kube-system"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/addons/storage-addons/nfs/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ nfs_manifests.results }}"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]

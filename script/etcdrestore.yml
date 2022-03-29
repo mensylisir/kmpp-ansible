@@ -1,0 +1,10 @@
+---
+- name: Check ansible version
+  import_playbook: ansible_version.yml
+
+- hosts: etcd
+  strategy: linear
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  gather_facts: false
+  roles:
+    - { role: etcdrestore }

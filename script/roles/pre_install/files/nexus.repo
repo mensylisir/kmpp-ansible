@@ -1,0 +1,23 @@
+[yum]
+name=Nexus Yum Repository
+baseurl=http://mirrors.kmpp.io:18091/repository/yumGroup/$releasever/os/$basearch/
+enabled=1
+gpgcheck=0
+
+[docker]
+name=Nexus Docker Repository
+baseurl=http://mirrors.kmpp.io:18091/repository/dockerGroup/$releasever/$basearch/stable/
+enabled=1
+gpgcheck=0
+
+[epel]
+name=Nexus Epel Repository
+baseurl=http://mirrors.kmpp.io:18091/repository/epelGroup/$releasever/$basearch/
+enabled=0
+gpgcheck=0
+
+[extras]
+name=Nexus Extras Repository
+baseurl=http://mirrors.kmpp.io:18091/repository/yumGroup/$releasever/extras/$basearch/
+enabled=1
+gpgcheck=0

@@ -1,0 +1,55 @@
+---
+- name: kubefed | Create manifests dir
+  file:
+    path: "{{ kube_config_dir }}/addons/kubefed"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: copy files
+  synchronize:
+    src: "{{ role_path }}/files/"
+    dest: "{{ kube_config_dir }}/addons/kubefed"
+    recursive: yes
+    delete: yes
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: kubefed | Templates list
+  set_fact:
+    kubefed_templates:
+      - { name: ns, file: ns.yaml, type: ns }
+      - { name: sa, file: sa.yaml, type: sa }
+      - { name: clusterrolebinding, file: clusterrolebinding.yaml, type: clusterrolebinding }
+
+- name: kubefed  | Create manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/addons/kubefed/{{ item.file }}"
+  with_items: "{{ kubefed_templates }}"
+  register: kubefed_manifests
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: kubefed | Apply manifests
+  kube:
+    name: "{{ item.item.name }}"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/addons/kubefed/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ kubefed_manifests.results }}"
+  when:
+    - inventory_hostname == groups['kube-master'][0]
+
+- name: Deploy kubefed from local path
+  shell: /usr/local/bin/helm upgrade -i kubefed  "{{ kube_config_dir }}/addons/kubefed/kubefed" -n kube-federation-system
+  args:
+    executable: /bin/bash
+  register: "results"
+
+- debug:
+    var: results

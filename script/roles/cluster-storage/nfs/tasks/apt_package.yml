@@ -1,0 +1,6 @@
+---
+# tasks file for installing foo on apt based distros
+- name: Install nfs-common
+  apt:
+    name: nfs-common
+    state: present

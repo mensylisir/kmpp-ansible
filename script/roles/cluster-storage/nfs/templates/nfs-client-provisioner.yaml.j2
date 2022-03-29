@@ -1,0 +1,38 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ storage_nfs_provisioner_name }}
+  namespace: kube-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ storage_nfs_provisioner_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ storage_nfs_provisioner_name }}
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+      - name: nfs-client-provisioner
+        image: images.kmpp.io:18093/external_storage/nfs-client-provisioner:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: nfs-client-root
+            mountPath: /persistentvolumes
+        env:
+          - name: PROVISIONER_NAME
+            value: {{ storage_nfs_provisioner_name }}
+          - name: NFS_SERVER
+            value: {{ storage_nfs_server }}
+          - name: NFS_PATH
+            value: {{ storage_nfs_server_path}}
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: {{ storage_nfs_server }}
+            path: {{ storage_nfs_server_path }}

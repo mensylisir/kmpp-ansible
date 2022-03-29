@@ -1,0 +1,5 @@
+---
+# vars file for koadmin
+#
+saName: "ko-admin"
+kubeadmin_namespace: "kube-system"

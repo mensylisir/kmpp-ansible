@@ -1,0 +1,56 @@
+---
+- name: kubeapps | Create manifests dir
+  file:
+    path: "{{ kube_config_dir }}/addons/kubeapps"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: copy files
+  synchronize:
+    src: "{{ role_path }}/files/"
+    dest: "{{ kube_config_dir }}/addons/kubeapps"
+    recursive: yes
+    delete: yes
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: kubeapps  | Templates list
+  set_fact:
+    kubeapps_templates:
+      - { name: ns, file: ns.yaml, type: ns }
+      - { name: sa, file: sa.yaml, type: sa }
+      - { name: clusterrolebinding, file: clusterrolebinding.yaml, type: clusterrolebinding }
+
+- name: kubeapps  | Create manifests
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/addons/kubeapps/{{ item.file }}"
+  with_items: "{{ kubeapps_templates }}"
+  register: kubeapps_manifests
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: kubeapps | Apply manifests
+  kube:
+    name: "{{ item.item.name }}"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/addons/kubeapps/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ kubeapps_manifests.results }}"
+  when:
+    - inventory_hostname == groups['kube_control_plane'][0]
+
+- name: Deploy kubeapps from local path
+  shell: /usr/local/bin/helm install  kubeapps  "{{ kube_config_dir }}/addons/kubeapps/kubeapps" -n kubeapps
+  args:
+    executable: /bin/bash
+  register: "results"
+
+- debug:
+    var: results
+

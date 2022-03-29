@@ -1,0 +1,6 @@
+---
+- hosts: all
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  tasks:
+    - name: manual sync time with ntpdate
+      shell: /usr/sbin/ntpdate 192.168.81.104

@@ -1,0 +1,6 @@
+cluster_name: mm
+kube_config_dir: /etc/kubernetes
+kube_version: v1.19.7
+storage_nfs_provisioner_name: nfs1
+storage_nfs_server: 192.168.81.105
+storage_nfs_server_path: /data/nfsmount

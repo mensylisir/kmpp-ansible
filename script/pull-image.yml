@@ -1,0 +1,31 @@
+---
+- hosts: all
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  tasks:
+    - name: pull image conference
+      shell: nerdctl pull harbor.dev.rdev.tech/kubesprary2/conformance:v1.22.4
+      tags:
+        - pull image
+- hosts: all
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  tasks:
+    - name: docker tag image conference
+      shell: nerdctl tag harbor.dev.rdev.tech/kubesprary2/conformance:v1.22.4 k8s.gcr.io/conformance:v1.22.4
+      tags:
+        - docker tag
+
+- hosts: all
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  tasks:
+    - name: pull image systemd-logs
+      shell: nerdctl pull harbor.dev.rdev.tech/kubesprary2/sonobuoy/systemd-logs:v0.4
+      tags:
+        - pull image
+- hosts: all
+  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
+  tasks:
+    - name: docker tag image systemd-logs
+      shell: nerdctl tag harbor.dev.rdev.tech/kubesprary2/sonobuoy/systemd-logs:v0.4 sonobuoy/systemd-logs:v0.4
+      tags:
+        - docker tag
+
